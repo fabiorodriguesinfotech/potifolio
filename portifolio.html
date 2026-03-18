@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabio Rodrigues | IT Projects</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a192f;
+            --secondary: #112240;
+            --accent: #64ffda;
+            --text-light: #ccd6f6;
+            --text-gray: #8892b0;
+            --white: #e6f1ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text-light);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, 
+                var(--primary) 0%, 
+                var(--primary) 25%, 
+                rgba(10, 25, 47, 0.8) 50%, 
+                transparent 100%);
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .hero-title { font-size: 3.5rem; color: var(--accent); letter-spacing: 2px; margin-bottom: 5px; }
+        .hero-subtitle { font-size: 1.2rem; color: var(--text-gray); margin-bottom: 20px; }
+        
+        .contact-links { margin-bottom: 20px; }
+        .contact-links a {
+            color: var(--accent);
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .contact-links a:hover { color: var(--white); }
+
+        .projects-container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .projects-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+        }
+
+        .project-card {
+            background: rgba(17, 34, 64, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            color: var(--text-light);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .project-card:hover { 
+            transform: translateY(-5px); 
+            border-color: var(--accent);
+            background: rgba(23, 42, 69, 0.9);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .project-card i { font-size: 1.5rem; color: var(--accent); }
+        .project-card h3 { font-size: 1.1rem; color: var(--white); }
+        .project-card p { font-size: 0.85rem; color: var(--text-gray); line-height: 1.4; }
+
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 9999; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(10, 25, 47, 0.98);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .modal.active { opacity: 1; display: block; }
+
+        .modal-content {
+            background: var(--secondary);
+            margin: 5vh auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+            position: relative;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal.active .modal-content { transform: scale(1) translateY(0); }
+
+        .close { position: absolute; right: 20px; top: 15px; color: var(--text-gray); font-size: 30px; cursor: pointer; transition: color 0.3s; }
+        .close:hover { color: var(--accent); }
+
+        .carousel-container { position: relative; width: 100%; height: 350px; background: #000; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        .carousel-img-wrapper { 
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        .carousel-img-wrapper.active { opacity: 1; pointer-events: auto; }
+
+        .carousel-img { 
+            max-width: 100%; max-height: 100%; 
+            object-fit: contain; 
+            cursor: zoom-in; 
+        }
+
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(10, 25, 47, 0.8); color: var(--accent); border: 1px solid var(--accent); padding: 10px; cursor: pointer; z-index: 10; transition: 0.3s; }
+        .nav-btn:hover { background: var(--accent); color: var(--primary); }
+        .nav-left { left: 10px; } .nav-right { right: 10px; }
+
+        #zoomOverlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 10000; 
+            justify-content: center; align-items: center; 
+            overflow: hidden;
+        }
+        #zoomedImg { 
+            max-width: 90%; max-height: 90%; 
+            transition: transform 0.1s ease-out; 
+            transform-origin: center;
+            position: relative;
+            user-select: none;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10001;
+        }
+        .zoom-ctrl-btn {
+            width: 45px; height: 45px;
+            background: rgba(17, 34, 64, 0.8);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.3s;
+        }
+        .zoom-ctrl-btn:hover { background: var(--accent); color: var(--primary); }
+
+        .close-zoom { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; z-index: 10001; }
+
+        @media (max-width: 768px) {
+            body { overflow-y: auto; height: auto; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="video-background">
+    <video autoplay muted loop playsinline>
+        <source src="bg.mp4" type="video/mp4">
+        Seu navegador não suporta vídeos.
+    </video>
+</div>
+
+<div class="video-overlay"></div>
+
+<div class="main-content">
+    <header>
+        <h1 class="hero-title">FABIO RODRIGUES</h1>
+        <p class="hero-subtitle">User Support Technician | Innovation & Hardware Solutions</p>
+        <div class="contact-links">
+            <a href="mailto:fabio.rodrigues.infotech@gmail.com"><i class="fas fa-envelope"></i> Email</a>
+            <a href="https://www.linkedin.com/in/fabiorodriguesinfotech/" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+            <a href="resume.pdf" download><i class="fas fa-file-pdf"></i> Resume</a>
+        </div>
+    </header>
+
+    <div class="projects-container">
+        <div class="projects-grid">
+            <button class="project-card" onclick="openProjectModal('sigma')">
+                <i class="fas fa-database"></i>
+                <h3>SIGMA System</h3>
+                <p>Asset management database built to track hardware lifecycles and optimize inventory.</p>
+            </button>
+            <button class="project-card" onclick="openProjectModal('kiosk')">
+                <i class="fas fa-keyboard"></i>
+                <h3>Smart Kiosk</h3>
+                <p>Automated service ticket terminal using AutoHotkey to streamline public triage.</p>
+            </button>
+            <button class="project-card" onclick="openProjectModal('cleaning')">
+                <i class="fas fa-broom"></i>
+                <h3>Maintenance</h3>
+                <p>Deep hardware cleaning and cable management to extend component life.</p>
+            </button>
+            <button class="project-card" onclick="openProjectModal('raid')">
+                <i class="fas fa-hdd"></i>
+                <h3>RAID Strategy</h3>
+                <p>Optimizing legacy machines with RAID to bypass high costs of new SSD/RAM.</p>
+            </button>
+            <button class="project-card" onclick="openProjectModal('testing')">
+                <i class="fas fa-microchip"></i>
+                <h3>Debian Station</h3>
+                <p>Custom diagnostics station running Debian for advanced data recovery.</p>
+            </button>
+            <button class="project-card" onclick="openProjectModal('legal')">
+                <i class="fas fa-balance-scale"></i>
+                <h3>Migration</h3>
+                <p>Successful refresh of 26 workstations for the Legal Dept. with zero downtime.</p>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="pModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="mBody"></div>
+    </div>
+</div>
+
+<div id="zoomOverlay">
+    <span class="close-zoom" onclick="closeZoom()">&times;</span>
+    <img id="zoomedImg" src="" draggable="false">
+    
+    <div class="zoom-controls">
+        <button class="zoom-ctrl-btn" onclick="adjustZoom(0.2)"><i class="fas fa-plus"></i></button>
+        <button class="zoom-ctrl-btn" onclick="adjustZoom(-0.2)"><i class="fas fa-minus"></i></button>
+        <button class="zoom-ctrl-btn" onclick="resetZoom()"><i class="fas fa-expand"></i></button>
+    </div>
+</div>
+
+<script>
+    const projectsData = {
+        sigma: {
+            title: "SIGMA System",
+            desc: "SIGMA is a comprehensive asset management database built to track hardware lifecycle.",
+            impact: "Optimized support response times and inventory tracking.",
+            imgs: ['sigma_1.png', 'sigma_2.png', 'sigma_3.png']
+        },
+        kiosk: {
+            title: "Smart Self-Service Kiosk",
+            desc: "Automated terminal using AutoHotkey to eliminate manual triage staff.",
+            impact: "Zero-cost hardware solution that reduced wait times.",
+            imgs: ['s_kiosk.jpg']
+        },
+        cleaning: {
+            title: "Preventive Maintenance",
+            desc: "Deep internal cleaning and structured cable management routine.",
+            impact: "Increased hardware longevity and reduced failure rates.",
+            imgs: ['cleaning.jpg', 'cleaning_1.jpg']
+        },
+        raid: {
+            title: "Strategic RAID Implementation",
+            desc: "Implementing RAID configurations on legacy machines to improve performance.",
+            impact: "Saved significant budget by repurposing legacy hardware.",
+            imgs: ['raid.jpg', 'raid_1.jpg', 'raid_2.jpg', 'raid_3.jpg']
+        },
+        testing: {
+            title: "Debian Linux Testing Station",
+            desc: "Dedicated diagnostics station running a custom Debian environment.",
+            impact: "Improved diagnostic accuracy and streamlined data recovery.",
+            imgs: ['testing_station.jpg']
+        },
+        legal: {
+            title: "Legal Dept. Migration",
+            desc: "Full hardware refresh for the municipal legal department.",
+            impact: "26 workstations deployed with zero downtime.",
+            imgs: []
+        }
+    };
+
+    let currentSlide = 0;
+    let projectImages = [];
+    let currentScale = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    function openProjectModal(key) {
+        const item = projectsData[key];
+        projectImages = item.imgs;
+        currentSlide = 0;
+        
+        let carouselHTML = '';
+        if (projectImages.length > 0) {
+            carouselHTML = `
+                <div class="carousel-container">
+                    ${projectImages.map((src, i) => `
+                        <div class="carousel-img-wrapper ${i === 0 ? 'active' : ''}">
+                            <img src="${src}" class="carousel-img" onclick="openZoom('${src}')">
+                        </div>
+                    `).join('')}
+                    ${projectImages.length > 1 ? `
+                        <button class="nav-btn nav-left" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <button class="nav-btn nav-right" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        document.getElementById('mBody').innerHTML = `
+            <h2 style="color:var(--accent); margin-bottom:15px;">${item.title}</h2>
+            ${carouselHTML}
+            <p style="margin:20px 0; line-height:1.6;">${item.desc}</p>
+            <div style="background: rgba(100,255,218,0.1); padding: 15px; border-radius: 4px; border-left: 3px solid var(--accent);">
+                <strong>IMPACT:</strong> ${item.impact}
+            </div>
+        `;
+        
+        const modal = document.getElementById('pModal');
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function moveSlide(step) {
+        const slides = document.querySelectorAll('.carousel-img-wrapper');
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + step + projectImages.length) % projectImages.length;
+        setTimeout(() => { slides[currentSlide].classList.add('active'); }, 50);
+    }
+
+    function closeModal() { 
+        const modal = document.getElementById('pModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 400);
+    }
+
+    function openZoom(src) {
+        const overlay = document.getElementById('zoomOverlay');
+        const img = document.getElementById('zoomedImg');
+        img.src = src;
+        resetZoom();
+        overlay.style.display = 'flex';
+    }
+
+    function closeZoom() { document.getElementById('zoomOverlay').style.display = 'none'; }
+
+    function updateImgTransform() {
+        const img = document.getElementById('zoomedImg');
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        img.style.cursor = currentScale > 1 ? 'grab' : 'default';
+    }
+
+    function adjustZoom(delta) {
+        currentScale += delta;
+        currentScale = Math.min(Math.max(1, currentScale), 4);
+        if (currentScale === 1) { translateX = 0; translateY = 0; }
+        updateImgTransform();
+    }
+
+    function resetZoom() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateImgTransform();
+    }
+
+    const zoomOverlay = document.getElementById('zoomOverlay');
+    const zoomedImg = document.getElementById('zoomedImg');
+
+    zoomOverlay.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        adjustZoom(delta);
+    }, { passive: false });
+
+    zoomedImg.addEventListener('mousedown', (e) => {
+        if (currentScale > 1) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            zoomedImg.style.cursor = 'grabbing';
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateImgTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (currentScale > 1) zoomedImg.style.cursor = 'grab';
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            if (zoomOverlay.style.display === 'flex') closeZoom();
+            else closeModal();
+        }
+    });
+
+    window.onclick = (e) => { if(e.target == document.getElementById('pModal')) closeModal(); }
+</script>
+
+</body>
+</html>
